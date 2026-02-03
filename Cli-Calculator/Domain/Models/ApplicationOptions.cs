@@ -3,5 +3,5 @@
 public  class ApplicationOptions
 {
     public bool ExitOnError { get; set; }
-    public int MaxNumbers { get; set; }
+    public int? MaxNumbers { get; set; }
 }

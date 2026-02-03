@@ -14,10 +14,14 @@ public class OperationService(
     public void Execute(string? args)
     {
         var numbers = ExtractNumbers(args).ToList();
-        
-        var maxNumbers = Math.Max(0, Math.Min(int.MaxValue, options.Value.MaxNumbers)); //Constraint to keep configured maxNumber into positive int range
-        if(numbers.Count > maxNumbers)
-            throw new MaximumNumbersExceededException(maxNumbers, numbers.Count);
+
+        var maxNumbersValue = options.Value.MaxNumbers;
+        if(maxNumbersValue is not null) //null removes the limit
+        {
+            var maxNumbers = Math.Max(2, Math.Min(int.MaxValue, (int)maxNumbersValue));
+            if (numbers.Count > maxNumbers)
+                throw new MaximumNumbersExceededException(maxNumbers, numbers.Count);
+        }
         
         _ = PerformOperation(numbers);
     }

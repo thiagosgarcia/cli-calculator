@@ -9,20 +9,26 @@ namespace CliCalculator;
 
 public class OperationServiceTests
 {
-    private readonly OperationService operationService;
-    private readonly Mock<IOptionsSnapshot<ApplicationOptions>> optionsMock;
+    private OperationService operationService;
+    private Mock<IOptionsSnapshot<ApplicationOptions>> optionsMock;
     private readonly Mock<SumOperation> sumMock;
 
     public OperationServiceTests()
     {
+        sumMock = new Mock<SumOperation>();
+        MockOptions();
+    }
+
+    private void MockOptions(int? max = 2)
+    {
         var defaultOptions = new ApplicationOptions
         {
             ExitOnError = false,
-            MaxNumbers = 2
+            MaxNumbers = max
         };
         optionsMock = new Mock<IOptionsSnapshot<ApplicationOptions>>();
-        sumMock = new Mock<SumOperation>();
         optionsMock.Setup(o => o.Value).Returns(defaultOptions);
+        
         operationService = new OperationService(optionsMock.Object, sumMock.Object);
     }
 
@@ -54,11 +60,25 @@ public class OperationServiceTests
     [InlineData("1,2,3")]
     [InlineData("10,20,30,40")]
     [InlineData("1, 2, abc, 34j, 0 , 2 , ^%^2, &^ , , ")]
-    public void ShouldLimitNumbers(string args)
+    public void ShouldLimitNumbersByDefaultMax(string args)
     {
         Assert.Throws<MaximumNumbersExceededException>(() => operationService.Execute(args));
         optionsMock.Verify(x => x.Value, Times.Once);
         optionsMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("1,2,3")]
+    [InlineData("10,20,30,40")]
+    [InlineData("1, 2, abc, 34j, 0 , 2 , ^%^2, &^ , , ")]
+    public void ShouldNotLimitNumbers(string args)
+    {
+        MockOptions(null);
+        operationService.Execute(args);
+        optionsMock.Verify(x => x.Value, Times.Once);
+        optionsMock.VerifyNoOtherCalls();
+        sumMock.Verify(x => x.LogAndAggregate(It.IsAny<IEnumerable<long>>()), Times.Once);
+        sumMock.VerifyNoOtherCalls();
     }
 
     [Theory]
