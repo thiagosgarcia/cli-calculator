@@ -1,4 +1,5 @@
-﻿using Cli_Calculator.Operations;
+﻿using System.Text.RegularExpressions;
+using Cli_Calculator.Operations;
 using Domain.ExceptionHandling;
 using Domain.Models;
 using Domain.Services;
@@ -11,7 +12,7 @@ public class OperationService(
     SumOperation sumOperation
 ) : IOperationService
 {
-    public void Execute(string? args)
+    public long Execute(string? args)
     {
         (args, var customSeparator) = ExtractCustomSeparator(args);
         var numbers = ExtractNumbers(args, customSeparator: customSeparator).ToList();
@@ -19,22 +20,22 @@ public class OperationService(
         ValidateNegatives(numbers);
         ValidateMaximumNumberCount(numbers);
 
-        _ = PerformOperation(numbers);
+        return PerformOperation(numbers);
     }
 
-    public (string? cleanArgs, string? delimiter) ExtractCustomSeparator(string? args)
+    public (string? cleanArgs, string[] delimiter) ExtractCustomSeparator(string? args)
     {
         if (string.IsNullOrWhiteSpace(args))
             return (args, null);
 
+        var delimiterRegex = new Regex(@"(?<=\[)(.+?)(?=\])");
         const string longDelimiterPrefix = "//[";
-        const string longDelimiterSuffix = "]";
-        if (args.StartsWith(longDelimiterPrefix) && args.Contains(longDelimiterSuffix))
+        if (args.StartsWith(longDelimiterPrefix) )
         {
-            var endIndex = args.IndexOf(longDelimiterSuffix, StringComparison.Ordinal);
-            var customPrefix = args.Substring(longDelimiterPrefix.Length, endIndex - longDelimiterPrefix.Length);
-            var cleanArgs = args.Substring(endIndex + 1 + customPrefix.Length);
-            return (cleanArgs, customPrefix);
+            var matches = delimiterRegex.Matches(args);
+            var customDelimiters = matches.Select(match => match.Value).ToList();
+            var cleanArgs = args.Substring(customDelimiters.Sum(x=> x.Length + 2) + 2);
+            return (cleanArgs, customDelimiters.ToArray());
         }
 
         //With this I can have any single character as delimiter, not only \n
@@ -43,7 +44,7 @@ public class OperationService(
         {
             var customPrefix = args.Substring(delimiterPrefix.Length, 1);
             var cleanArgs = args.Substring(delimiterPrefix.Length + 2);
-            return (cleanArgs, customPrefix);
+            return (cleanArgs, [customPrefix]);
         }
 
         return (args, null);
@@ -76,7 +77,7 @@ public class OperationService(
         };
     }
 
-    public IEnumerable<long> ExtractNumbers(string? args, string separator = ",", string? customSeparator = null)
+    public IEnumerable<long> ExtractNumbers(string? args, string separator = ",", string[] customSeparator = null)
     {
         if (string.IsNullOrWhiteSpace(args))
         {
@@ -90,7 +91,7 @@ public class OperationService(
             var customSeparators = new[] {"\n"};
             
             if(customSeparator is not null)
-                customSeparators = customSeparators.Append(customSeparator).ToArray();
+                customSeparators = customSeparators.Concat(customSeparator).ToArray();
 
             var partIsProcessed = false;
             foreach (var cs in customSeparators)

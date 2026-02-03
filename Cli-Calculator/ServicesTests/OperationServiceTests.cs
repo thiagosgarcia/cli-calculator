@@ -70,7 +70,7 @@ public class OperationServiceTests
         new long[] { 1, 2, 0, 0, 0, 2, 0, 0, 0, 0 })] //Empty entries should be considered zero
     public void ShouldExtractNumberWithCustomDelimiter(string? custom, string? input, long[] expected)
     {
-        var result = operationService.ExtractNumbers(input, customSeparator:custom).ToArray();
+        var result = operationService.ExtractNumbers(input, customSeparator: [custom]).ToArray();
         Assert.Equal(expected, result);
     }
 
@@ -85,7 +85,7 @@ public class OperationServiceTests
         new long[] { 1, 2, 0, 0, 0, 2, 0, 0, 0, 0 })] //Empty entries should be considered zero
     public void ShouldExtractNumberWithAlternativeAndCustomDelimiter(string? custom, string? input, long[] expected)
     {
-        var result = operationService.ExtractNumbers(input, customSeparator: custom).ToArray();
+        var result = operationService.ExtractNumbers(input, customSeparator: [custom]).ToArray();
         Assert.Equal(expected, result);
     }
 
@@ -186,6 +186,18 @@ public class OperationServiceTests
         Assert.NotEqual(args, cleanArgs);
         var prefix = separator.Length > 1 ? "[" : "";
         Assert.Equal(args.Replace($"//{prefix}{separator}", "").Substring(1), cleanArgs);
+        Assert.Equal(delimiter.ToList(), [separator]);
+    }
+    
+    [Theory]
+    [InlineData("//[###][***][a]###10###20***30\n40,-30a-40", "###", "***", "a")]
+    public void ExtractCustomMultipleSeparator(string args, string s1, string s2, string s3)
+    {
+        var separator =new  []{s1, s2, s3};
+        var (cleanArgs, delimiter) = operationService.ExtractCustomSeparator(args);
+        Assert.NotNull(delimiter);
+        Assert.NotEqual(args, cleanArgs);
+        Assert.Equal(args.Replace($"//[{string.Join("][", separator)}", "").Substring(1), cleanArgs);
         Assert.Equal(delimiter, separator);
     }
 }
