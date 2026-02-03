@@ -13,12 +13,29 @@ public class OperationService(
 {
     public void Execute(string? args)
     {
-        var numbers = ExtractNumbers(args).ToList();
+        (args, var customSeparator) = ExtractCustomSeparator(args);
+        var numbers = ExtractNumbers(args, customSeparator: customSeparator).ToList();
 
         ValidateNegatives(numbers);
         ValidateMaximumNumberCount(numbers);
 
         _ = PerformOperation(numbers);
+    }
+
+    public (string? cleanArgs, string? delimiter) ExtractCustomSeparator(string? args)
+    {
+        if (string.IsNullOrWhiteSpace(args))
+            return (args, null);
+
+        const string delimiterPrefix = "//";
+        if (args.StartsWith(delimiterPrefix))
+        {
+            var customPrefix = args.Substring(delimiterPrefix.Length, 1);
+            var cleanArgs = args.Substring(delimiterPrefix.Length + 2);
+            return (cleanArgs, customPrefix);
+        }
+
+        return (args, null);
     }
 
     private void ValidateNegatives(List<long> numbers)
@@ -48,7 +65,7 @@ public class OperationService(
         };
     }
 
-    public IEnumerable<long> ExtractNumbers(string? args, string separator = ",")
+    public IEnumerable<long> ExtractNumbers(string? args, string separator = ",", string? customSeparator = null)
     {
         if (string.IsNullOrWhiteSpace(args))
         {
@@ -59,14 +76,26 @@ public class OperationService(
         var parts = args.Split(separator);
         foreach (var part in parts)
         {
-            var newLine = "\n";
-            if (part.Contains(newLine))
+            var customSeparators = new[] {"\n"};
+            
+            if(customSeparator is not null)
+                customSeparators = customSeparators.Append(customSeparator).ToArray();
+
+            var partIsProcessed = false;
+            foreach (var cs in customSeparators)
             {
-                var inner = ExtractNumbers(part, newLine);
-                foreach (var innerNumber in inner)
-                    yield return innerNumber;
-                continue;
+                if (part.Contains(cs))
+                {
+                    //The definition says 1 char-long separator, so with this recursion we can support any pattern
+                    var inner = ExtractNumbers(part, cs, customSeparator);
+                    foreach (var innerNumber in inner)
+                        yield return innerNumber;
+                    partIsProcessed = true;
+                    break;
+                }
             }
+            if(partIsProcessed)
+                continue;
             
             if (long.TryParse(part, out var number))
                 yield return ValidateBounds(number);
