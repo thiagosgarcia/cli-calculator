@@ -47,6 +47,18 @@ public class OperationServiceTests
     }
 
     [Theory]
+    [InlineData("1\n2,3", new long[] { 1, 2, 3 })]
+    [InlineData("1\n2\n 3", new long[] { 1, 2, 3 })]
+    [InlineData("10,20,30\n40", new long[] { 10, 20, 30, 40 })]
+    [InlineData("1, 2, abc\n 34j, 0 , 2 , ^%^2, &^ \n , ",
+        new long[] { 1, 2, 0, 0, 0, 2, 0, 0, 0, 0 })] //Empty entries should be considered zero
+    public void ShouldExtractNumberWithAlternativeDelimiter(string? input, long[] expected)
+    {
+        var result = operationService.ExtractNumbers(input).ToArray();
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
     [InlineData(Operation.Add)]
     public void ShouldCallCorrectOperation(Operation operation)
     {

@@ -7,22 +7,22 @@ using Microsoft.Extensions.Options;
 namespace Cli_Calculator.Services;
 
 public class OperationService(
-        IOptionsSnapshot<ApplicationOptions> options,
-        SumOperation sumOperation
-    ) :IOperationService
+    IOptionsSnapshot<ApplicationOptions> options,
+    SumOperation sumOperation
+) : IOperationService
 {
     public void Execute(string? args)
     {
         var numbers = ExtractNumbers(args).ToList();
 
         var maxNumbersValue = options.Value.MaxNumbers;
-        if(maxNumbersValue is not null) //null removes the limit
+        if (maxNumbersValue is not null) //null removes the limit
         {
             var maxNumbers = Math.Max(2, Math.Min(int.MaxValue, (int)maxNumbersValue));
             if (numbers.Count > maxNumbers)
                 throw new MaximumNumbersExceededException(maxNumbers, numbers.Count);
         }
-        
+
         _ = PerformOperation(numbers);
     }
 
@@ -34,7 +34,7 @@ public class OperationService(
             _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
         };
     }
-    
+
     public IEnumerable<long> ExtractNumbers(string? args, string separator = ",")
     {
         if (string.IsNullOrWhiteSpace(args))
@@ -42,12 +42,23 @@ public class OperationService(
             yield return 0;
             yield break;
         }
-        
-        var parts = args.Split(separator, StringSplitOptions.TrimEntries);
+
+        var parts = args.Split(separator);
         foreach (var part in parts)
+        {
+            var newLine = "\n";
+            if (part.Contains(newLine))
+            {
+                var inner = ExtractNumbers(part, newLine);
+                foreach (var innerNumber in inner)
+                    yield return innerNumber;
+                continue;
+            }
+            
             if (long.TryParse(part, out var number))
                 yield return number;
             else
                 yield return 0;
+        }
     }
 }
