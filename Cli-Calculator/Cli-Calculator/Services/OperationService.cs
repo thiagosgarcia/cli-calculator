@@ -69,9 +69,11 @@ public class OperationService(
             }
             
             if (long.TryParse(part, out var number))
-                yield return number;
+                yield return ValidateBounds(number);
             else
                 yield return 0;
         }
     }
+
+    private long ValidateBounds(long param) => param > 1000 ? 0 : param;
 }
