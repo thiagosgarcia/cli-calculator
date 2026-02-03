@@ -62,6 +62,7 @@ public class OperationServiceTests
     [Theory]
     [InlineData("p", "1p2,3", new long[] { 1, 2, 3 })]
     [InlineData("#", "10,20#30,40 , 1000, 1001", new long[] { 10, 20, 30, 40, 1000, 0 })]
+    [InlineData("***", "10,20***30,40 , 1000, 1001", new long[] { 10, 20, 30, 40, 1000, 0 })]
     [InlineData("#","100", new long[] { 100 })]
     [InlineData("#","", new long[] { 0 })]
     [InlineData("#",null, new long[] { 0 })]
@@ -75,8 +76,10 @@ public class OperationServiceTests
 
     [Theory]
     [InlineData("a","1a2\n3", new long[] { 1, 2, 3 })]
+    [InlineData("abc","1abc2\n3", new long[] { 1, 2, 3 })]
     [InlineData("b","1\n2b 3", new long[] { 1, 2, 3 })]
     [InlineData("#","10,20,30\n40", new long[] { 10, 20, 30, 40 })]
+    [InlineData("#*#","10,20#*#30\n40", new long[] { 10, 20, 30, 40 })]
     [InlineData("#","10,20,30\n40, 1000, 1001", new long[] { 10, 20, 30, 40, 1000, 0 })]
     [InlineData("#","1, 2, abc\n 34j, 0 , 2 , ^%^2, &^ \n , ",
         new long[] { 1, 2, 0, 0, 0, 2, 0, 0, 0, 0 })] //Empty entries should be considered zero
@@ -101,8 +104,8 @@ public class OperationServiceTests
     [InlineData("10,20,30,40")]
     [InlineData("1, 2, abc, 34j, 0 , 2 , ^%^2, &^ , , ")]
     [InlineData("//#,1#2,3")]
-    [InlineData("//#\n1#2,3")]
-    [InlineData("//##1#2#3")]
+    [InlineData("/[***]\n1***2,3")]
+    [InlineData("//[***]***1***2***3")]
     public void ShouldLimitNumbersByDefaultMax(string args)
     {
         Assert.Throws<MaximumNumbersExceededException>(() => operationService.Execute(args));
@@ -117,6 +120,8 @@ public class OperationServiceTests
     [InlineData("1, -2, abc, 34j, 0 , 2 , ^%^2, &^ , , ", "-2")]
     [InlineData("//#,-1#2,3", "-1")]
     [InlineData("//#\n-1#2,3", "-1")]
+    [InlineData("//[***],-1***2,3", "-1")]
+    [InlineData("//[***]\n-1***2,3", "-1")]
     public void ShouldDenyNegatives(string args, string negatives)
     {
         var msg = string.Empty;
@@ -173,12 +178,14 @@ public class OperationServiceTests
     [InlineData("//b\n1\n2b 3", "b")]
     [InlineData("//#,10,20,30\n40", "#")]
     [InlineData("//##10,20,30\n40", "#")]
+    [InlineData("//[###]###10###20,30\n40", "###")]
     public void ExtractCustomSeparator(string args, string separator)
     {
         var (cleanArgs, delimiter) = operationService.ExtractCustomSeparator(args);
         Assert.NotNull(delimiter);
         Assert.NotEqual(args, cleanArgs);
-        Assert.Equal(args.Replace($"//{separator}", "").Substring(1), cleanArgs);
+        var prefix = separator.Length > 1 ? "[" : "";
+        Assert.Equal(args.Replace($"//{prefix}{separator}", "").Substring(1), cleanArgs);
         Assert.Equal(delimiter, separator);
     }
 }

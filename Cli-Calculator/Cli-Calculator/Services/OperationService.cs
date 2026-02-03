@@ -27,6 +27,17 @@ public class OperationService(
         if (string.IsNullOrWhiteSpace(args))
             return (args, null);
 
+        const string longDelimiterPrefix = "//[";
+        const string longDelimiterSuffix = "]";
+        if (args.StartsWith(longDelimiterPrefix) && args.Contains(longDelimiterSuffix))
+        {
+            var endIndex = args.IndexOf(longDelimiterSuffix, StringComparison.Ordinal);
+            var customPrefix = args.Substring(longDelimiterPrefix.Length, endIndex - longDelimiterPrefix.Length);
+            var cleanArgs = args.Substring(endIndex + 1 + customPrefix.Length);
+            return (cleanArgs, customPrefix);
+        }
+
+        //With this I can have any single character as delimiter, not only \n
         const string delimiterPrefix = "//";
         if (args.StartsWith(delimiterPrefix))
         {
@@ -86,7 +97,6 @@ public class OperationService(
             {
                 if (part.Contains(cs))
                 {
-                    //The definition says 1 char-long separator, so with this recursion we can support any pattern
                     var inner = ExtractNumbers(part, cs, customSeparator);
                     foreach (var innerNumber in inner)
                         yield return innerNumber;
