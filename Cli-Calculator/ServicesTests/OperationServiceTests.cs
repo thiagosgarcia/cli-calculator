@@ -77,6 +77,31 @@ public class OperationServiceTests
         Assert.Throws<MaximumNumbersExceededException>(() => operationService.Execute(args));
         optionsMock.Verify(x => x.Value, Times.Once);
         optionsMock.VerifyNoOtherCalls();
+        sumMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("1,2,-3", "-3")]
+    [InlineData("-10,-20,-30,-40", "-10, -20, -30, -40")]
+    [InlineData("1, -2, abc, 34j, 0 , 2 , ^%^2, &^ , , ", "-2")]
+    public void ShouldDenyNegatives(string args, string negatives)
+    {
+        var msg = string.Empty;
+        Assert.Throws<NoNegativesAllowedException>(() =>
+        {
+            try
+            {
+                operationService.Execute(args);
+            }
+            catch (NoNegativesAllowedException ex)
+            {
+                msg = ex.Message;
+                throw;
+            }
+        });
+        Assert.Contains(negatives, msg);
+        optionsMock.VerifyNoOtherCalls();
+        sumMock.VerifyNoOtherCalls();
     }
 
     [Theory]

@@ -29,6 +29,12 @@ public class RunnerService(
                 if (options.Value.ExitOnError)
                     break;
             }
+            catch (NoNegativesAllowedException ex)
+            {
+                Console.WriteLine(ex.Message);
+                if (options.Value.ExitOnError)
+                    break;
+            }
             catch (OperationCanceledException ex)
             {
                 Console.WriteLine(ex.Message);

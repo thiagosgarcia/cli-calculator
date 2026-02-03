@@ -15,6 +15,21 @@ public class OperationService(
     {
         var numbers = ExtractNumbers(args).ToList();
 
+        ValidateNegatives(numbers);
+        ValidateMaximumNumberCount(numbers);
+
+        _ = PerformOperation(numbers);
+    }
+
+    private void ValidateNegatives(List<long> numbers)
+    {
+        var negatives = numbers.Where(n => n < 0).ToArray();
+        if (negatives.Length != 0)
+            throw new NoNegativesAllowedException(negatives);
+    }
+
+    private void ValidateMaximumNumberCount(List<long> numbers)
+    {
         var maxNumbersValue = options.Value.MaxNumbers;
         if (maxNumbersValue is not null) //null removes the limit
         {
@@ -22,8 +37,6 @@ public class OperationService(
             if (numbers.Count > maxNumbers)
                 throw new MaximumNumbersExceededException(maxNumbers, numbers.Count);
         }
-
-        _ = PerformOperation(numbers);
     }
 
     public long PerformOperation(IEnumerable<long> numbers, Operation operation = Operation.Add)

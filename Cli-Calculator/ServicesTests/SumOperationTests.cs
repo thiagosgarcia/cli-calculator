@@ -8,11 +8,13 @@ public class SumOperationTests
     private readonly SumOperation service = new();
 
     [Theory]
-    [InlineData(new long[] { }, "= 0")] //Special case, this doesn't happen in current output
+    [InlineData(new long[] { }, "= 0")]
     [InlineData(new long[] { 0 }, "0 = 0")]
     [InlineData(new long[] { 1, 2, 3 }, "1 + 2 + 3 = 6")]
     [InlineData(new long[] { 1, 0, 3 }, "1 + 0 + 3 = 4")]
+    [InlineData(new long[] { 1, 0, -3 }, "1 + 0 + -3 = -2")]
     [InlineData(new long[] { 10, 20, 30, 40 }, "10 + 20 + 30 + 40 = 100")]
+    [InlineData(new long[] { 10, 20, 30, -40 }, "10 + 20 + 30 + -40 = 20")]
     public void ShouldLogAndSum(long[] numbers, string? expected)
     {
         var stringWriter = new StringWriter();
