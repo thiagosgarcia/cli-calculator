@@ -550,3 +550,4 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # End of https://www.toptal.com/developers/gitignore/api/dotnetcore,rider,powershell,csharp
+Cli-Calculator/.idea/
