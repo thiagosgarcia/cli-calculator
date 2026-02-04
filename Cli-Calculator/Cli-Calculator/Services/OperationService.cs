@@ -9,6 +9,7 @@ namespace Cli_Calculator.Services;
 
 public class OperationService(
     IOptionsSnapshot<ApplicationOptions> options,
+    IOptionsSnapshot<ApplicationParameters> parameters,
     SumOperation sumOperation
 ) : IOperationService
 {
@@ -52,6 +53,9 @@ public class OperationService(
 
     private void ValidateNegatives(List<long> numbers)
     {
+        if (parameters.Value.AllowNegatives ?? false)
+            return;
+        
         var negatives = numbers.Where(n => n < 0).ToArray();
         if (negatives.Length != 0)
             throw new NoNegativesAllowedException(negatives);
@@ -89,6 +93,8 @@ public class OperationService(
         foreach (var part in parts)
         {
             var customSeparators = new[] {"\n"};
+            if(!string.IsNullOrWhiteSpace(parameters.Value.AdditionalDelimiter))
+                customSeparators = customSeparators.Append(parameters.Value.AdditionalDelimiter).ToArray();
             
             if(customSeparator is not null)
                 customSeparators = customSeparators.Concat(customSeparator).ToArray();
@@ -115,5 +121,5 @@ public class OperationService(
         }
     }
 
-    private long ValidateBounds(long param) => param > 1000 ? 0 : param;
+    private long ValidateBounds(long param) => param > (parameters.Value.UpperOverride ?? 1000) ? 0 : param;
 }

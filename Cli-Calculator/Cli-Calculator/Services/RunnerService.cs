@@ -19,7 +19,7 @@ public class RunnerService(
             {
                 Console.WriteLine("Enter the comma separated numbers to be added:");
                 var str = Console.ReadLine();
-                operationService.Execute(str);
+                _ = operationService.Execute(str);
                 if (str is null)
                     break;
             }
