@@ -5,7 +5,7 @@ namespace CliCalculator;
 
 public class SumOperationTests
 {
-    private readonly SumOperation service = new();
+    private readonly SumOperation _service = new();
 
     [Theory]
     [InlineData(new long[] { }, "= 0")]
@@ -19,7 +19,7 @@ public class SumOperationTests
     {
         var stringWriter = new StringWriter();
         Console.SetOut(stringWriter);
-        _ = service.LogAndAggregate(numbers);
+        _ = _service.LogAndAggregate(numbers);
 
         var output = stringWriter.ToString().Trim();
         Assert.Equal(expected, output);

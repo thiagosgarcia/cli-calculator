@@ -12,11 +12,17 @@ public class OperationServiceTests
     private OperationService operationService;
     private Mock<IOptionsSnapshot<ApplicationOptions>> optionsMock;
     private readonly Mock<SumOperation> sumMock;
+    private readonly Mock<SubtractionOperation> subtractMock;
+    private readonly  Mock<DivisionOperation> divisionMock;
+    private readonly Mock<MultiplicationOperation> multiplicationMock;
     private Mock<IOptionsSnapshot<ApplicationParameters>> paramsMock;
 
     public OperationServiceTests()
     {
         sumMock = new Mock<SumOperation>();
+        subtractMock = new Mock<SubtractionOperation>();
+        divisionMock = new Mock<DivisionOperation>();
+        multiplicationMock = new Mock<MultiplicationOperation>();
         MockOptions();
     }
 
@@ -38,7 +44,14 @@ public class OperationServiceTests
         paramsMock = new Mock<IOptionsSnapshot<ApplicationParameters>>();
         paramsMock.Setup(o => o.Value).Returns(defaultParameters);
 
-        operationService = new OperationService(optionsMock.Object, paramsMock.Object, sumMock.Object);
+        operationService = new OperationService(
+            optionsMock.Object, 
+            paramsMock.Object,
+            sumMock.Object,
+            subtractMock.Object,
+            multiplicationMock.Object,
+            divisionMock.Object
+            );
     }
 
     [Theory]
@@ -117,7 +130,7 @@ public class OperationServiceTests
     [InlineData("//[***]***1***2***3")]
     public void ShouldLimitNumbersByDefaultMax(string args)
     {
-        Assert.Throws<MaximumNumbersExceededException>(() => operationService.Execute(args));
+        Assert.Throws<MaximumNumbersExceededException>(() => operationService.Execute(args, Operation.Add));
         optionsMock.Verify(x => x.Value, Times.Once);
         optionsMock.VerifyNoOtherCalls();
         sumMock.VerifyNoOtherCalls();
@@ -138,7 +151,7 @@ public class OperationServiceTests
         {
             try
             {
-                operationService.Execute(args);
+                operationService.Execute(args, Operation.Add);
             }
             catch (NoNegativesAllowedException ex)
             {
@@ -158,7 +171,7 @@ public class OperationServiceTests
     public void ShouldNotLimitNumbers(string args)
     {
         MockOptions(null);
-        operationService.Execute(args);
+        operationService.Execute(args, Operation.Add);
         optionsMock.Verify(x => x.Value, Times.Once);
         optionsMock.VerifyNoOtherCalls();
         sumMock.Verify(x => x.LogAndAggregate(It.IsAny<IEnumerable<long>>()), Times.Once);
@@ -173,7 +186,7 @@ public class OperationServiceTests
     [InlineData(null)]
     public void ShouldPerformOperation(string args)
     {
-        operationService.Execute(args);
+        operationService.Execute(args, Operation.Add);
         optionsMock.Verify(x => x.Value, Times.Once);
         optionsMock.VerifyNoOtherCalls();
         sumMock.Verify(x => x.LogAndAggregate(It.IsAny<IEnumerable<long>>()), Times.Once);

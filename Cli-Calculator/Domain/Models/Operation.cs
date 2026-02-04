@@ -2,5 +2,8 @@
 
 public enum Operation
 {
-    Add
+    Add,
+    Subtract,
+    Multiply,
+    Divide
 }

@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using Cli_Calculator.Operations;
+﻿using Cli_Calculator.Operations;
 using Cli_Calculator.Services;
 using Domain.Extensions;
 using Domain.Models;
@@ -25,6 +23,9 @@ var host = Host.CreateDefaultBuilder(args)
         {
             services.AddSingleton(globalCts);
             services.AddTransient<SumOperation>();
+            services.AddTransient<SubtractionOperation>();
+            services.AddTransient<MultiplicationOperation>();
+            services.AddTransient<DivisionOperation>();
             services.AddTransient<IRunnerService, RunnerService>();
             services.AddTransient<IOperationService, OperationService>();
             services.Configure<ApplicationOptions>(configuration);

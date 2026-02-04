@@ -37,7 +37,14 @@ public class IntegrationTests
         paramsMock = new Mock<IOptionsSnapshot<ApplicationParameters>>();
         paramsMock.Setup(o => o.Value).Returns(defaultParameters);
 
-        operationService = new OperationService(optionsMock.Object, paramsMock.Object, new SumOperation());
+        operationService = new OperationService(
+            optionsMock.Object,
+            paramsMock.Object, 
+            new SumOperation(),
+            new SubtractionOperation(),
+            new MultiplicationOperation(),
+            new DivisionOperation()
+            );
     }
 
     [Theory]
@@ -50,7 +57,7 @@ public class IntegrationTests
     [InlineData("2,,4,rrrr,1001,6", 12)]
     public void ProvidedSamples(string sample, long expected)
     {
-        Assert.Equal(expected, operationService.Execute(sample));
+        Assert.Equal(expected, operationService.Execute(sample, Operation.Add));
     }
 
     [Theory]
@@ -64,7 +71,7 @@ public class IntegrationTests
     public void AlternateDelimiter(string sample, long expected)
     {
         MockOptions(extraSeparator: "\b");
-        Assert.Equal(expected, operationService.Execute(sample));
+        Assert.Equal(expected, operationService.Execute(sample, Operation.Add));
     }
 
     [Theory]
@@ -78,7 +85,7 @@ public class IntegrationTests
     public void ShouldAllowNegatives(string sample, long expected)
     {
         MockOptions(allowNegatives: true);
-        Assert.Equal(expected, operationService.Execute(sample));
+        Assert.Equal(expected, operationService.Execute(sample, Operation.Add));
     }
 
     [Theory]
@@ -92,14 +99,14 @@ public class IntegrationTests
     public void ShouldNotAllowNegatives(string sample)
     {
         MockOptions(allowNegatives: false);
-        Assert.Throws<NoNegativesAllowedException>(() => operationService.Execute(sample));
+        Assert.Throws<NoNegativesAllowedException>(() => operationService.Execute(sample, Operation.Add));
     }
 
     [Theory]
     [InlineData("2,,4,rrrr,1001,6", 12)]
     public void ShouldIgnoreBiggerThanMaximum(string sample, long expected)
     {
-        Assert.Equal(expected, operationService.Execute(sample));
+        Assert.Equal(expected, operationService.Execute(sample, Operation.Add));
     }
 
     [Theory]
@@ -108,6 +115,6 @@ public class IntegrationTests
     public void ShouldAcceptAllNumbers(string sample, long expected)
     {
         MockOptions(allowNegatives:true, maxValue: 2000);
-        Assert.Equal(expected, operationService.Execute(sample));
+        Assert.Equal(expected, operationService.Execute(sample, Operation.Add));
     }
 }

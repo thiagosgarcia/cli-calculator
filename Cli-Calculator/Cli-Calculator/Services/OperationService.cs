@@ -10,10 +10,13 @@ namespace Cli_Calculator.Services;
 public class OperationService(
     IOptionsSnapshot<ApplicationOptions> options,
     IOptionsSnapshot<ApplicationParameters> parameters,
-    SumOperation sumOperation
+    SumOperation sumOperation,
+    SubtractionOperation subtractionOperation,
+    MultiplicationOperation multiplicationOperation,
+    DivisionOperation divisionOperation
 ) : IOperationService
 {
-    public long Execute(string? args)
+    public long Execute(string? args, Operation operation)
     {
         (args, var customSeparator) = ExtractCustomSeparator(args);
         var numbers = ExtractNumbers(args, customSeparator: customSeparator).ToList();
@@ -21,7 +24,7 @@ public class OperationService(
         ValidateNegatives(numbers);
         ValidateMaximumNumberCount(numbers);
 
-        return PerformOperation(numbers);
+        return PerformOperation(numbers, operation);
     }
 
     public (string? cleanArgs, string[] delimiter) ExtractCustomSeparator(string? args)
@@ -77,6 +80,9 @@ public class OperationService(
         return operation switch
         {
             Operation.Add => sumOperation.LogAndAggregate(numbers),
+            Operation.Subtract => subtractionOperation.LogAndAggregate(numbers),
+            Operation.Multiply => multiplicationOperation.LogAndAggregate(numbers),
+            Operation.Divide => divisionOperation.LogAndAggregate(numbers),
             _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
         };
     }
